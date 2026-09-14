@@ -1,0 +1,26 @@
+{
+  "name": "poker-ev-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && node scripts/postbuild.mjs",
+    "preview": "npx serve out",
+    "cases": "node scripts/run-cases.mjs",
+    "verify": "node scripts/verify-cases.mjs",
+    "check": "npm run cases && npm run verify"
+  },
+  "dependencies": {
+    "chart.js": "4.4.7",
+    "next": "15.5.3",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "typescript": "5.8.3"
+  },
+  "type": "module"
+}
