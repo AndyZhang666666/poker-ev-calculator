@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时刻只跑一个部署，新的 push 不打断正在进行的部署
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 脚本直接 import .ts（Node 22.6+ 原生剥离类型），不能用 20
+          node-version: 22
+          cache: npm
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - run: npm ci
+
+      # 构建前先跑模型校验：8 个案例与预期不一致、或手算用例不过，就不该发上去
+      - name: Verify model
+        run: npm run check
+
+      # 校验脚本会重写 results/cases.json；如果和提交的版本有差异，说明代码和产物脱节
+      - name: Results must be committed
+        run: git diff --exit-code -- results/
+
+      - run: npm run build
+
+      # .nojekyll 由 scripts/postbuild.mjs 在 npm run build 里写入，本地和 CI 走同一条路径
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
