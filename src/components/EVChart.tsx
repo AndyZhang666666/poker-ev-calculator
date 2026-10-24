@@ -11,8 +11,8 @@ import styles from "@/styles/Calculator.module.css";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
-const COLORS: Record<Action, string> = { fold: "#9a968f", call: "#3a6ea5", raise: "#d97b2a" };
-const BEST = "#2e8b57";
+const COLORS: Record<Action, string> = { fold: "#7b858c", call: "#1d5fbf", raise: "#283a46" };
+const BEST = "#1d5fbf";
 
 export default function EVChart({ result, opponentAction }: { result: EVResult; opponentAction: OpponentAction }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,11 +22,11 @@ export default function EVChart({ result, opponentAction }: { result: EVResult; 
     if (!canvasRef.current) return;
     chartRef.current = new Chart(canvasRef.current, {
       type: "bar",
-      data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 2, borderRadius: 6, maxBarThickness: 96 }] },
+      data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 2, borderRadius: 2, maxBarThickness: 96 }] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 400 },
+        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 250 },
         plugins: {
           legend: { display: false },
           tooltip: {

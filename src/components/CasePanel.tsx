@@ -20,8 +20,8 @@ export default function CasePanel({ activeId, onPick }: { activeId: string | nul
       <div className={styles.panel}>
         <h2>8 个经典场景 <small>点一张卡片，一键填进计算器</small></h2>
         <p className={styles.small} style={{ margin: "0 0 14px" }}>
-          覆盖三种最优决策（弃牌 / 跟注 / 加注）和三条街。每张卡片上的 EV 都由 <code>lib/ev.ts</code> 实时算出，
-          与仓库里 <code>results/cases.json</code> 的校验数据一致。
+          覆盖弃牌、跟注与加注的假设比较，以及翻牌前、转牌、河牌场景。案例数字来自同一套简化模型，
+          用于检查交互和计算一致性，不代表经真实牌局验证的策略。
         </p>
         <div className={styles.caseGrid}>
           {CASES.map((c, i) => {
@@ -48,7 +48,7 @@ export default function CasePanel({ activeId, onPick }: { activeId: string | nul
                   {c.opponentBet > 0 ? ` ${c.opponentBet}` : ""} · 筹码 {c.myStack}
                 </div>
                 <div className={styles.caseBest}>
-                  <span>最优：<b>{actionLabel(r.bestAction, c.opponentAction)}</b></span>
+                  <span>假设下较优：<b>{actionLabel(r.bestAction, c.opponentAction)}</b></span>
                   <span className={styles.caseEvs}>
                     {actionLabel("call", c.opponentAction)} {fmt(r.call)} · {actionLabel("raise", c.opponentAction)} {r.raiseAvailable ? fmt(r.raise) : "—"}
                   </span>

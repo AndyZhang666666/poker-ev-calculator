@@ -1,7 +1,7 @@
 // 跑 8 个经典案例，把 EV 结果写到 results/cases.json。README 里引用的每个数字都来自这个文件。
 //
 // 直接 import src/lib/*.ts —— Node 22 原生剥离类型注解，脚本和页面跑的是同一份代码。
-// 输出是确定性的：重跑必须字节一致（只有 generatedAt 的日期会变）。
+// 输出是确定性的：重跑必须字节一致。模型版本代替墙钟日期，避免隔天 CI 出现伪差异。
 
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
@@ -69,7 +69,7 @@ const summary = {
 };
 
 const out = {
-  generatedAt: new Date().toISOString().slice(0, 10),
+  modelVersion: 'effective-pot-v2-2026-10-24',
   source: "src/lib/ev.ts + src/lib/cases.ts",
   model: {
     winRate: "clamp(handStrength/100 + typeAdjust + actionAdjust, 0.05, 0.95)",

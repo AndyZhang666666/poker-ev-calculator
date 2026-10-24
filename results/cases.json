@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14",
+  "modelVersion": "effective-pot-v2-2026-10-24",
   "source": "src/lib/ev.ts + src/lib/cases.ts",
   "model": {
     "winRate": "clamp(handStrength/100 + typeAdjust + actionAdjust, 0.05, 0.95)",

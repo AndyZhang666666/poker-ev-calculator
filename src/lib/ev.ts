@@ -3,7 +3,7 @@
 // 模型刻意简化（详见 docs/ASSUMPTIONS.md）：
 //   胜率 = 手牌强度/100 ± 对手类型修正 ± 对手行动修正，夹在 [5%, 95%]
 //   弃牌 EV = 0
-//   跟注 EV = 胜率 × (底池 + 对手下注) − (1 − 胜率) × 跟注额
+//   跟注 EV = 胜率 × (底池 + 有效对手下注) − (1 − 胜率) × 跟注额
 //   加注 EV = 弃牌率 × (底池 + 对手下注)
 //           + (1 − 弃牌率) × [被跟注后胜率 × (底池 + 加注额) − (1 − 被跟注后胜率) × 加注额]
 //   被跟注后胜率 = 胜率 − 范围收窄惩罚（按对手类型 + 对手行动查表）
@@ -68,6 +68,14 @@ export const BET_POT_FRACTION = 2 / 3;
 
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
 
+function validateParams(p: EVParams): void {
+  if (!p || !Object.hasOwn(OPPONENT_TYPE_ADJUST, p.opponentType) || !Object.hasOwn(OPPONENT_ACTION_ADJUST, p.opponentAction)) throw Error("请选择支持的对手类型与行动。");
+  if (!Number.isFinite(p.handStrength) || p.handStrength < 0 || p.handStrength > 100) throw Error("手牌强度须为 0–100 的有限数值。");
+  for (const k of ['pot','opponentBet','myStack','opponentStack'] as const) {
+    if (!Number.isFinite(p[k]) || p[k] < 0 || p[k] > 1e9) throw Error("底池与筹码须为 0–10 亿的有限数值。");
+  }
+}
+
 export function estimateWinRate(
   handStrength: number,
   opponentType: OpponentType,
@@ -98,27 +106,36 @@ export function winRateWhenCalled(
   return clamp(winRate - CALLED_PENALTY_TYPE[opponentType] - CALLED_PENALTY_ACTION[opponentAction], WIN_RATE_FLOOR, WIN_RATE_CEIL);
 }
 
-/** 跟注所需的最低胜率 = 跟注额 / (底池 + 对手下注 + 跟注额) */
+/** 跟注所需的最低胜率；短筹码时只计可争夺的对手下注。 */
 export function potOddsOf(pot: number, opponentBet: number, callAmount: number): number {
-  const denom = pot + opponentBet + callAmount;
+  if (![pot,opponentBet,callAmount].every(x=>Number.isFinite(x)&&x>=0&&x<=1e9) || callAmount > opponentBet) throw Error('无效的底池或跟注金额。');
+  // Heads-up, no side pots: an unmatched excess bet is not money this caller can win.
+  const contestedBet = Math.min(opponentBet, callAmount);
+  const denom = pot + contestedBet + callAmount;
   return denom > 0 ? callAmount / denom : 0;
 }
 
 /**
- * 使跟注 EV = 0 的手牌强度。跟注 EV = w·(pot+bet) − (1−w)·call = 0 ⇔ w = call/(pot+bet+call) = 底池赔率，
+ * 使跟注 EV = 0 的手牌强度。bet 为有效对手下注，w = call/(pot+bet+call) = 底池赔率，
  * 再把胜率修正项反减回去。若所需胜率超出 [5%, 95%] 可达范围则返回 null。
  */
 export function breakEvenStrength(params: EVParams): number | null {
-  const callAmount = Math.min(params.opponentBet, params.myStack);
+  validateParams(params);
+  const bet = params.opponentAction === 'check' ? 0 : params.opponentBet;
+  const callAmount = Math.min(bet, params.myStack);
   if (callAmount <= 0) return null; // 对手过牌，跟注（过牌）永远 ≥ 0
-  const needed = potOddsOf(params.pot, params.opponentBet, callAmount);
-  if (needed < WIN_RATE_FLOOR || needed > WIN_RATE_CEIL) return null;
+  const needed = potOddsOf(params.pot, bet, callAmount);
+  // A clipped plateau or an unreachable root is not an internal negative-to-positive crossing.
+  if (needed <= estimateWinRate(0,params.opponentType,params.opponentAction) || needed >= estimateWinRate(100,params.opponentType,params.opponentAction)) return null;
   const s = (needed - OPPONENT_TYPE_ADJUST[params.opponentType] - OPPONENT_ACTION_ADJUST[params.opponentAction]) * 100;
-  return clamp(s, 0, 100);
+  return s >= 0 && s <= 100 ? s : null;
 }
 
 export function calculateEV(params: EVParams): EVResult {
-  const { handStrength, pot, opponentBet, myStack, opponentStack, opponentType, opponentAction } = params;
+  validateParams(params);
+  const { handStrength, pot, myStack, opponentStack, opponentType, opponentAction } = params;
+  const opponentBet = opponentAction === 'check' ? 0 : params.opponentBet;
+  const decisionAvailable = myStack > 0;
 
   const winRate = estimateWinRate(handStrength, opponentType, opponentAction);
 
@@ -126,7 +143,7 @@ export function calculateEV(params: EVParams): EVResult {
   const callAmount = Math.min(opponentBet, myStack);
   const callWin = pot + callAmount;
   const fold = 0;
-  const call = winRate * callWin - (1 - winRate) * callAmount;
+  const call = decisionAvailable ? winRate * callWin - (1 - winRate) * callAmount : 0;
 
   // 加注：加注到对手下注的 3 倍；对手过牌时改为下注 2/3 底池。
   // 上限：我的筹码；对手最多能跟到「他已下注 + 剩余筹码」，再多也赢不到。
@@ -150,6 +167,9 @@ export function calculateEV(params: EVParams): EVResult {
   const bestAction = candidates.reduce((best, cur) => (cur[1] > best[1] + 1e-9 ? cur : best))[0];
 
   return {
+    decisionAvailable,
+    callAmount,
+    contestedOpponentBet: callAmount,
     fold,
     call,
     raise,
@@ -165,11 +185,13 @@ export function calculateEV(params: EVParams): EVResult {
 }
 
 export function sensitivityAnalysis(baseParams: EVParams, step = 5): SensitivityPoint[] {
+  if (!Number.isInteger(step) || step < 1 || step > 100) throw Error('敏感性步长须为 1–100 的整数。');
   const out: SensitivityPoint[] = [];
   for (let s = 0; s <= 100; s += step) {
     const r = calculateEV({ ...baseParams, handStrength: s });
     out.push({ handStrength: s, fold: r.fold, call: r.call, raise: r.raise, winRate: r.winRate });
   }
+  if(out.at(-1)?.handStrength!==100){const r=calculateEV({...baseParams,handStrength:100});out.push({handStrength:100,fold:r.fold,call:r.call,raise:r.raise,winRate:r.winRate});}
   return out;
 }
 

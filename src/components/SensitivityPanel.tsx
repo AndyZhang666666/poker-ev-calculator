@@ -11,7 +11,7 @@ import { actionLabel, sensitivityAnalysis, calculateEV } from "@/lib/ev";
 
 Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Filler);
 
-const C = { fold: "#9a968f", call: "#3a6ea5", raise: "#d97b2a" };
+const C = { fold: "#7b858c", call: "#1d5fbf", raise: "#283a46" };
 
 /** 找 0..100 上「最优决策」的分段边界（步长 1） */
 function zones(params: EVParams) {
@@ -32,8 +32,8 @@ export default function SensitivityPanel({ params, currentStrength }: { params: 
 
   const points = useMemo(() => sensitivityAnalysis(params, 5), [params]);
   const zs = useMemo(() => zones(params), [params]);
-  const be = useMemo(() => calculateEV(params).breakEvenStrength, [params]);
-  const raiseAvailable = calculateEV(params).raiseAvailable;
+  const result=useMemo(()=>calculateEV(params),[params]);
+  const be=result.breakEvenStrength,raiseAvailable=result.raiseAvailable;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -43,7 +43,7 @@ export default function SensitivityPanel({ params, currentStrength }: { params: 
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 400 },
+        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 250 },
         interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { display: false },
@@ -79,18 +79,19 @@ export default function SensitivityPanel({ params, currentStrength }: { params: 
       borderDash: dash,
       pointRadius: points.map((p) => (p.handStrength === Math.round(currentStrength / 5) * 5 ? 5 : 0)),
       pointBackgroundColor: color,
-      tension: 0.25,
+      tension: 0,
       fill: false,
     });
     chart.data.datasets = [
       mk("fold", C.fold, [4, 4]),
       mk("call", C.call),
-      ...(raiseAvailable ? [mk("raise", C.raise)] : []),
+      ...(raiseAvailable ? [mk("raise", C.raise,[7,3])] : []),
     ];
     chart.update();
   }, [points, oa, currentStrength, raiseAvailable]);
 
   const zoneColor = (a: string) => (a === "fold" ? C.fold : a === "call" ? C.call : C.raise);
+  if(!result.decisionAvailable)return <section className={styles.panel}><h2>暂无可比较的行动</h2><p>没有剩余筹码。请先回到计算器调整参数，再查看敏感性。</p></section>;
 
   return (
     <div>
@@ -103,9 +104,9 @@ export default function SensitivityPanel({ params, currentStrength }: { params: 
           </small>
         </h2>
         <div className={styles.legend}>
-          <span className={styles.fold}>{actionLabel("fold", oa)}（恒 0）</span>
-          <span className={styles.call}>{actionLabel("call", oa)}</span>
-          {raiseAvailable && <span className={styles.raise}>{actionLabel("raise", oa)}</span>}
+          <span style={{color:C.fold}}>{actionLabel("fold", oa)} · 细虚线</span>
+          <span style={{color:C.call}}>{actionLabel("call", oa)} · 蓝实线</span>
+          {raiseAvailable && <span style={{color:C.raise}}>{actionLabel("raise", oa)} · 深虚线</span>}
           <span style={{ marginLeft: "auto" }}>● 当前位置</span>
         </div>
         <div className={styles.lineBox}>
@@ -125,15 +126,15 @@ export default function SensitivityPanel({ params, currentStrength }: { params: 
           {be !== null ? (
             <>
               <b>跟注临界点：手牌强度 {be.toFixed(1)}</b>。这里跟注 EV = 0，即胜率恰好等于底池赔率{" "}
-              {((Math.min(params.opponentBet, params.myStack) / (params.pot + params.opponentBet + Math.min(params.opponentBet, params.myStack))) * 100).toFixed(1)}%。
+              {(result.potOdds*100).toFixed(1)}%。
               强度再低一点就该弃牌 —— 除非加注能把对手逼走。
             </>
           ) : oa === "check" ? (
             <>对手过牌，{actionLabel("call", oa)}不花钱，永远不亏，所以没有临界点；问题只剩「要不要下注」。</>
           ) : (
-            <>在当前底池赔率下，跟注所需胜率超出了模型 5%–95% 的可达范围，没有临界点。</>
+            <>当前强度 0–100 内没有从负转正的内部跟注临界点，可能始终非负或始终非正；请看实际曲线，端点打平和夹平区间不算内部切换。</>
           )}
-          {" "}三条曲线都是分段线性的，因为胜率对强度是线性的，只在 5% / 95% 处被夹平。
+          {" "}跟注与弃牌是分段线性；加注还组合了弃牌率与被跟注后胜率，不一定线性。连线只连接实际计算点，不做平滑插值。
         </div>
       </div>
     </div>

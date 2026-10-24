@@ -26,6 +26,11 @@ export interface EVParams {
 }
 
 export interface EVResult {
+  /** 没有剩余筹码时已无本模型中的可选择动作，不应输出行动建议。 */
+  decisionAvailable: boolean;
+  callAmount: number;
+  /** 对手能与本次跟注匹配的部分；其余未被跟注的筹码不计入可争夺底池。 */
+  contestedOpponentBet: number;
   fold: number;
   call: number;
   raise: number;
@@ -42,6 +47,18 @@ export interface EVResult {
   calledWinRate: number;
   /** 使跟注 EV = 0 的手牌强度（在当前对手类型/行动下），无解时为 null */
   breakEvenStrength: number | null;
+}
+
+export interface CalcState {
+  hand: [Card, Card];
+  board: Card[];
+  strengthOverride: number | null;
+  pot: number;
+  opponentBet: number;
+  myStack: number;
+  opponentStack: number;
+  opponentType: OpponentType;
+  opponentAction: OpponentAction;
 }
 
 export interface SensitivityPoint {

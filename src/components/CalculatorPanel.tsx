@@ -4,25 +4,14 @@
 // 所有计算都是 calculateEV 一个纯函数，这里只负责把 state 映射成控件、把 result 映射成文案。
 
 import styles from "@/styles/Calculator.module.css";
-import type { Card, EVParams, EVResult, OpponentAction, OpponentType } from "@/lib/types";
+import type { CalcState, EVParams, EVResult, OpponentAction, OpponentType } from "@/lib/types";
+export type {CalcState} from '@/lib/types';
 import { actionLabel } from "@/lib/ev";
 import { handKey, handStrengthOf, strengthTier } from "@/lib/handStrength";
 import HandSelector from "./HandSelector";
 import ParamSlider from "./ParamSlider";
 import EVChart from "./EVChart";
-
-export interface CalcState {
-  hand: [Card, Card];
-  board: Card[];
-  /** null = 跟随起手牌表；数字 = 用户手动覆盖 */
-  strengthOverride: number | null;
-  pot: number;
-  opponentBet: number;
-  myStack: number;
-  opponentStack: number;
-  opponentType: OpponentType;
-  opponentAction: OpponentAction;
-}
+import CounterfactualPanel from './CounterfactualPanel';
 
 export function effectiveStrength(s: CalcState): number {
   if (s.strengthOverride !== null) return s.strengthOverride;
@@ -60,9 +49,11 @@ interface Props {
   state: CalcState;
   result: EVResult;
   onChange: (patch: Partial<CalcState>) => void;
+  uncertainty: number;
+  onUncertainty: (v:number)=>void;
 }
 
-export default function CalculatorPanel({ state, result, onChange }: Props) {
+export default function CalculatorPanel({ state, result, onChange, uncertainty, onUncertainty }: Props) {
   const params = toParams(state);
   const strength = params.handStrength;
   const tableStrength = handStrengthOf(state.hand[0], state.hand[1]);
@@ -109,7 +100,7 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
 
         <div className={styles.panel}>
           <h2>底池与筹码</h2>
-          <ParamSlider label="当前底池" value={state.pot} min={0} max={2000} step={5} onChange={(v) => onChange({ pot: v })} />
+          <ParamSlider label="对手本次行动前的底池" value={state.pot} min={0} max={2000} step={5} onChange={(v) => onChange({ pot: v })} />
           <ParamSlider
             label={checkMode ? "对手下注（过牌时不适用）" : "对手下注"}
             value={checkMode ? 0 : state.opponentBet}
@@ -126,9 +117,9 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
           <h2>对手</h2>
           <div className={styles.field}>
             <div className={styles.fieldHead}><label>对手类型</label></div>
-            <div className={styles.segment} role="radiogroup" aria-label="对手类型">
+            <div className={styles.segment} role="group" aria-label="对手类型">
               {OPP_TYPES.map((t) => (
-                <button key={t.id} type="button" className={state.opponentType === t.id ? styles.on : ""} onClick={() => onChange({ opponentType: t.id })} title={t.hint}>
+                <button key={t.id} type="button" aria-pressed={state.opponentType===t.id} className={state.opponentType === t.id ? styles.on : ""} onClick={() => onChange({ opponentType: t.id })} title={t.hint}>
                   {t.label}
                 </button>
               ))}
@@ -137,9 +128,9 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
           </div>
           <div className={styles.field}>
             <div className={styles.fieldHead}><label>对手行动</label></div>
-            <div className={styles.segment} role="radiogroup" aria-label="对手行动">
+            <div className={styles.segment} role="group" aria-label="对手行动">
               {OPP_ACTIONS.map((a) => (
-                <button key={a.id} type="button" className={oa === a.id ? styles.on : ""} onClick={() => onChange({ opponentAction: a.id })}>
+                <button key={a.id} type="button" aria-pressed={oa===a.id} className={oa === a.id ? styles.on : ""} onClick={() => onChange({ opponentAction: a.id })}>
                   {a.label}
                 </button>
               ))}
@@ -150,6 +141,7 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
 
       {/* ---------- 结果区 ---------- */}
       <div>
+        {!result.decisionAvailable ? <section className={styles.panel} role="status"><h2>当前已无可投入筹码</h2><p>这个单轮模型不再提供行动比较。请增加「我的剩余筹码」，或载入另一个案例。这里不会把等待摊牌写成“跟注最优”。</p></section> : <>
         <div className={styles.panel}>
           <h2>EV 对比 <small>三个决策的期望收益，单位 = 筹码</small></h2>
           <EVChart result={result} opponentAction={oa} />
@@ -159,7 +151,7 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
               const disabled = a === "raise" && !result.raiseAvailable;
               return (
                 <div key={a} className={`${styles.evCell} ${isBest ? styles.best : ""}`} style={disabled ? { opacity: 0.45 } : undefined}>
-                  {isBest && <span className={styles.badge}>✓ 最优</span>}
+                  {isBest && <span className={styles.badge}>当前假设较优</span>}
                   <div className={styles.name}>
                     <span className={styles.dot} style={{ background: a === "fold" ? "var(--c-fold)" : a === "call" ? "var(--c-call)" : "var(--c-raise)" }} />
                     {actionLabel(a, oa)}
@@ -188,11 +180,12 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
               <div className={styles.label}>底池赔率（跟注所需胜率）</div>
               <div className={styles.big}>{checkMode ? "—" : pct(result.potOdds)}</div>
               <div className={styles.hint}>
-                {checkMode ? "对手过牌，跟注不花钱" : `${callAmount} / (${params.pot} + ${params.opponentBet} + ${callAmount})`}
+                {checkMode ? "对手过牌，无需跟注" : `${callAmount} / (${params.pot} + ${result.contestedOpponentBet} + ${callAmount})`}
+                {!checkMode&&params.opponentBet>callAmount&&' · 已排除对手未被匹配的超额下注'}
               </div>
             </div>
             <div className={`${styles.kpi} ${styles.best}`}>
-              <div className={styles.label}>最优决策</div>
+              <div className={styles.label}>当前假设下 EV 较高</div>
               <div className={styles.big}>{bestName}</div>
               <div className={styles.hint}>
                 {result.breakEvenStrength !== null ? `跟注临界强度 ${result.breakEvenStrength.toFixed(0)}` : "无跟注临界点"}
@@ -230,13 +223,15 @@ export default function CalculatorPanel({ state, result, onChange }: Props) {
               <p>对手已经全押或你的筹码不足，没有加注空间，只在弃牌和{callName}之间选。</p>
             )}
             <p>
-              结论：<b>{bestName}</b>
+              在这些人为假设下：<b>{bestName}</b> 的 EV 较高，不是现实牌局的最优策略保证。
               {result.breakEvenStrength !== null && !checkMode && (
                 <> · 在当前对手条件下，手牌强度低于 <b>{result.breakEvenStrength.toFixed(0)}</b> 时跟注开始亏钱（敏感性 tab 有完整曲线）。</>
               )}
             </p>
           </div>
         </div>
+        <CounterfactualPanel params={params} width={uncertainty} onWidth={onUncertainty}/>
+        </>}
       </div>
     </div>
   );

@@ -86,9 +86,9 @@ export default function HandSelector({ hand, board, onHandChange, onBoardChange 
         <div className={styles.boardRow}>
           {board.length === 0 && <span className={styles.empty}>翻牌前 —— 还没有公共牌</span>}
           {board.map((c, i) => (
-            <span key={i} title="点击移除" style={{ cursor: "pointer" }} onClick={() => onBoardChange(board.filter((_, j) => j !== i))}>
+            <button key={i} type="button" className={styles.removeCard} aria-label={`移除公共牌 ${RANK_LABEL[c.rank]}${SUIT_SYMBOL[c.suit]}`} onClick={() => onBoardChange(board.filter((_, j) => j !== i))}>
               <CardFace card={c} />
-            </span>
+            </button>
           ))}
         </div>
         {board.length < 5 && (
