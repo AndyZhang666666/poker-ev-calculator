@@ -1,5 +1,26 @@
 # Poker EV · 决策沙盘
 
+[在线体验](https://andyzhang666666.github.io/poker-ev-calculator/) · [English](README.en.md) · [作品索引](https://github.com/AndyZhang666666/AndyZhang666666/blob/main/PROJECTS.md)
+
+强度假设估错一点，较优行动会不会改变？
+
+## 值得看的设计
+
+- 赔率与 EV 共用有效筹码口径。
+- 在输入的强度范围内逐点检查行动切换。
+- 结果保留假设与模型版本，不把单轮近似当作完整策略。
+
+## 建议体验路径
+
+1. 载入固定案例，核对底池、筹码与对手假设。
+2. 比较弃牌、跟注和加注，再调整强度误差范围。
+3. 查看敏感性曲线，导出带输入与局限的判断记录。
+
+**运行方式：** 单对手、单轮的学习模型。公共牌不自动计算胜率，强度与弃牌率未经真实牌局校准，不是 GTO 求解器。
+
+<details>
+<summary>展开实现、模型与验证记录</summary>
+
 [在线体验](https://andyzhang666666.github.io/poker-ev-calculator/) · [模型假设](docs/ASSUMPTIONS.md) · [验收记录](docs/VALIDATION.md)
 
 不只比较哪个行动的 EV 高，也看强度估错一点时，结论是否切换。一个无需登录、无需 API Key、浏览器本地运行的单轮决策模型练习工具。
@@ -60,3 +81,5 @@ TEST_URL=http://localhost:8804/poker-ev-calculator/ node scripts/test-browser.mj
 ## License
 
 MIT（沿用本仓库既有许可）。
+
+</details>
