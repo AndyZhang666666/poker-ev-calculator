@@ -39,8 +39,8 @@
 }
 .tabbar button small {
   display: block;
-  font-size: 10.5px;
-  opacity: 0.62;
+  font-size: 12px;
+  opacity: 0.85;
   font-weight: 400;
 }
 .tabbar button.active {
