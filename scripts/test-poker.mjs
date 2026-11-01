@@ -123,3 +123,12 @@ test('import validates evidence rather than accepting corrupt grades, cards or c
   const merged = mergeNotebooks(book, book); assert.equal(merged.attempts.length, 1); assert.equal(merged.mistakes.length, 1);
   assert.equal(merged.charts, book.charts);
 });
+test('a full 500-attempt backup with precise custom ranges can import its own export', () => {
+  const text = formatRange(Object.fromEntries(HAND_CLASSES.map(name => [name, .1234567890123456])));
+  const charts = Object.fromEntries(POSITIONS.map(position => [position, text]));
+  const spot = makeSpot('UTG', ['As', 'Qh'], charts, 'large-backup');
+  const book = {...emptyNotebook(), charts, attempts: Array.from({length: 500}, (_, i) => attempt(spot, 'raise', 'practice', i))};
+  const exported = JSON.stringify(book);
+  assert.ok(new TextEncoder().encode(exported).byteLength > 2000000);
+  assert.deepEqual(decodeNotebook(exported), book);
+});

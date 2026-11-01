@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/postbuild.mjs",
-    "preview": "npx serve out",
+    "preview": "node scripts/preview.mjs",
     "cases": "node scripts/run-cases.mjs",
     "verify": "node scripts/verify-cases.mjs",
     "test": "node --test scripts/test-boundaries.mjs scripts/test-poker.mjs",

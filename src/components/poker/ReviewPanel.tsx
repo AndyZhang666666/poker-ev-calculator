@@ -1,6 +1,6 @@
 'use client';
 import {useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction} from 'react';
-import {decodeNotebook, mergeNotebooks, recordAttempt, type Mistake, type Notebook} from '@/lib/poker/notebook';
+import {decodeNotebook, mergeNotebooks, recordAttempt, MAX_NOTEBOOK_BYTES, type Mistake, type Notebook} from '@/lib/poker/notebook';
 import {type Action} from '@/lib/poker/training';
 import {downloadJson} from '@/lib/poker/download';
 import PracticeQuestion from './PracticeQuestion';
@@ -25,7 +25,7 @@ export default function ReviewPanel({book, update, onPractice}: {
     const file = event.target.files?.[0]; event.target.value = '';
     if (!file) return;
     try {
-      if (file.size > 2000000) throw new Error('备份文件超过 2 MB，请选择本工具导出的较小备份。');
+      if (file.size > MAX_NOTEBOOK_BYTES) throw new Error('备份文件超过 8 MB，请选择本工具导出的备份。');
       const incoming = decodeNotebook(await file.text());
       if (!incoming) throw new Error('这个文件不是有效的训练备份，当前记录没有改变。');
       update(current => ({...mergeNotebooks(current, incoming), charts: importCharts ? incoming.charts : current.charts}));

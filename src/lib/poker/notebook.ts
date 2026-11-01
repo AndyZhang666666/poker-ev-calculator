@@ -2,6 +2,7 @@ import {DEFAULT_CHARTS, POSITIONS, gradeSpot, validSpot, type Action, type Chart
 import {formatRange, parseRange} from './ranges.ts';
 
 export const NOTEBOOK_KEY = 'poker-lab-notebook-v1';
+export const MAX_NOTEBOOK_BYTES = 8000000;
 export interface Attempt {id: string; at: string; spot: PracticeSpot; action: Action; mode: 'practice' | 'review'}
 export interface Mistake {
   key: string; spot: PracticeSpot; firstAt: string; lastAt: string; errors: number; reviewStreak: number; archived: boolean;
@@ -28,7 +29,7 @@ export function recordAttempt(book: Notebook, attempt: Attempt): Notebook {
 }
 
 export function decodeNotebook(raw: string | null): Notebook | null {
-  if (!raw || raw.length > 2000000) return null;
+  if (!raw || new TextEncoder().encode(raw).byteLength > MAX_NOTEBOOK_BYTES) return null;
   try {
     const book = JSON.parse(raw) as Notebook;
     if (book.version !== 1 || !book.charts || typeof book.charts !== 'object'

@@ -1,6 +1,7 @@
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 import assert from 'node:assert/strict';import fs from 'node:fs';
-const url=process.env.TEST_URL||'http://127.0.0.1:8804/poker-ev-calculator/';
+const baseUrl=process.env.TEST_URL||'http://127.0.0.1:8854/poker-ev-calculator/';
+const url=baseUrl.split('#')[0]+'#calc'; // Legacy EV regression; new workspaces have separate acceptance records.
 const out=process.env.EVIDENCE_DIR||'/tmp/poker-ev-evidence';fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,channel:process.env.CHROME_CHANNEL||'chrome'});
 const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
