@@ -1,0 +1,125 @@
+
+> poker-ev-calculator@0.2.0 check
+> npm run cases && npm run verify && npm test
+
+
+> poker-ev-calculator@0.2.0 cases
+> node scripts/run-cases.mjs
+
+✓ results/cases.json — 8/8 案例与任务书预期一致
+  ✓ #1 翻牌前 AA vs 加注   胜率   85%  赔率   40%  跟注   33.75  加注    42.5  → 加注
+  ✓ #2 翻牌前 72o vs 下注  胜率    5%  赔率 36.4%  跟注  -17.25  加注  -44.42  → 弃牌
+  ✓ #3 转牌顺子听牌 vs 下注   胜率   50%  赔率   25%  跟注     100  加注      84  → 跟注
+  ✓ #4 河牌顶对 vs 全押     胜率   57%  赔率 35.7%  跟注     298  加注     298  → 跟注
+  ✓ #5 翻牌前 KQs vs 松对手下注 胜率   68%  赔率 36.4%  跟注    17.4  加注   23.33  → 加注
+  ✓ #6 翻牌前 99 vs 紧对手加注 胜率   61%  赔率 42.1%  跟注   17.95  加注    1.13  → 跟注
+  ✓ #7 转牌同花听牌 vs 过牌   胜率   45%  赔率    0%  过牌     135  下注     147  → 下注
+  ✓ #8 河牌无牌 vs 大注     胜率    5%  赔率 30.8%  跟注    -335  加注  -93.75  → 弃牌
+
+> poker-ev-calculator@0.2.0 verify
+> node scripts/verify-cases.mjs
+
+
+[1] 手牌强度表
+  ✓ 恰好 169 种起手牌
+  ✓ 13 个口袋对
+  ✓ 78 个同花 + 78 个非同花
+  ✓ 所有值在 [0, 100]
+  ✓ 任务书给定的 27 个锚点全部一致
+  ✓ AA 是全表最强
+  ✓ 72o 是全表最弱
+  ✓ 同花永远 ≥ 同点数非同花
+  ✓ handKey 顺序无关：A♠K♥ 与 K♥A♠ 同 key
+  ✓ handStrengthOf 拒绝同一张牌
+
+[2] 胜率估算
+  ✓ 平衡对手 + 下注，强度 50 → 胜率 45%
+  ✓ 松对手 + 过牌，强度 50 → 胜率 60%
+  ✓ 紧对手 + 加注，强度 50 → 胜率 35%
+  ✓ 下限 5%：强度 0 紧对手加注
+  ✓ 上限 95%：强度 100 松对手过牌
+  ✓ 胜率对强度单调不减
+
+[3] 对手弃牌率
+  ✓ 平衡 + 下注 + 强度 50 → 30%
+  ✓ 紧 > 平衡 > 松（同条件）
+  ✓ 过牌 > 下注 > 加注（同条件）
+  ✓ 夹在 [10%, 70%]
+
+[4] EV 手算用例
+  ✓ 跟注 EV = 0.45×150 − 0.55×50 = 40
+  ✓ 弃牌 EV 恒为 0
+  ✓ 底池赔率 = 50/(100+50+50) = 25%
+  ✓ 加注额 = 3 × 50 = 150
+  ✓ 临界强度 = (25% + 5%) × 100 = 30
+  ✓ 临界强度处跟注 EV ≈ 0
+  ✓ 临界强度以下跟注 EV < 0，以上 > 0
+  ✓ 跟注额受我方筹码限制：赢 100+200、输 200
+  ✓ 对手已全押 → 无法加注，raiseAvailable = false
+  ✓ 无法加注时加注 EV 等于跟注 EV（不参与最优判定）
+  ✓ 对手过牌：过牌 EV = 胜率 × 底池 ≥ 0
+  ✓ 对手过牌：下注额 = round(2/3 × 100) = 67
+  ✓ 对手过牌：底池赔率 0、无临界点
+  ✓ 我方无筹码且对手过牌：过牌 EV = 胜率 × 底池，不能下注
+  ✓ EV 对强度单调不减（跟注/加注）
+  ✓ 敏感性分析 step=5 → 21 个点，覆盖 0..100
+  ✓ potOddsOf 边界：底池 0 下注 0 → 0
+
+[5] 8 个经典案例
+  ✓ results/cases.json 有 8 个案例
+  ✓ 翻牌前 AA vs 加注: 最优 = raise
+  ✓ 翻牌前 AA vs 加注: JSON 与实时计算一致
+  ✓ 翻牌前 72o vs 下注: 最优 = fold
+  ✓ 翻牌前 72o vs 下注: JSON 与实时计算一致
+  ✓ 转牌顺子听牌 vs 下注: 最优 = call
+  ✓ 转牌顺子听牌 vs 下注: JSON 与实时计算一致
+  ✓ 河牌顶对 vs 全押: 最优 = call
+  ✓ 河牌顶对 vs 全押: JSON 与实时计算一致
+  ✓ 翻牌前 KQs vs 松对手下注: 最优 = raise
+  ✓ 翻牌前 KQs vs 松对手下注: JSON 与实时计算一致
+  ✓ 翻牌前 99 vs 紧对手加注: 最优 = call
+  ✓ 翻牌前 99 vs 紧对手加注: JSON 与实时计算一致
+  ✓ 转牌同花听牌 vs 过牌: 最优 = raise
+  ✓ 转牌同花听牌 vs 过牌: JSON 与实时计算一致
+  ✓ 河牌无牌 vs 大注: 最优 = fold
+  ✓ 河牌无牌 vs 大注: JSON 与实时计算一致
+  ✓ 案例三种最优决策都出现过
+  ✓ JSON summary.matched = 8
+
+全部通过
+
+> poker-ev-calculator@0.2.0 test
+> node --test scripts/test-boundaries.mjs scripts/test-poker.mjs
+
+✔ short stack uses the same effective contested pot for odds and EV (2.201791ms)
+✔ call EV sign and the odds comparison agree across short/full stacks and all priors (5.578042ms)
+✔ check normalizes a stale betting control and zero stack gives no action recommendation (0.726041ms)
+✔ invalid model inputs, inherited enum names and nonfinite amounts are rejected (0.14175ms)
+✔ reported internal call boundary really crosses zero (0.261875ms)
+✔ unsafe sensitivity steps reject and any valid step still includes 100 (0.281292ms)
+✔ counterfactual reports discrete assumptions rather than an invented probability (1.484833ms)
+✔ only validated versioned drafts restore, including exact cards and uncertainty (0.313708ms)
+✔ 169 classes expand to every physical two-card holding exactly once (3.437792ms)
+✔ range notation handles pairs, same-high and diagonal intervals, both suits and frequencies (1.29575ms)
+✔ known-card removal counts actual remaining combinations before normalizing weights (0.350958ms)
+✔ river certainties reach 0 and 1; the board can force a split pot (0.48625ms)
+✔ a turn fixture has exactly two losing rivers among 44 legal runouts (0.450709ms)
+✔ weighted river ranges are normalized by physical combos and their weights (0.249958ms)
+✔ invalid states cannot reach the evaluator, including empty blocked ranges (0.278208ms)
+✔ Monte Carlo is seeded, preserves inputs and agrees with an independently enumerable case (24.194625ms)
+✔ preflop large trees choose sampling and progress finishes at the reported count (1.412542ms)
+✔ lookup evaluator agrees with a separate 5-card-subset evaluator on fixed and random matchups (43.643541ms)
+✔ all thirty teaching spots validate and random practice samples physical distinct cards (74.692708ms)
+✔ mixed-frequency references accept both supported actions without claiming frequency calibration (0.287958ms)
+✔ mistakes survive, require two review successes and reopen on a new deviation (4.042709ms)
+✔ changing a chart does not rewrite the reference attached to old mistakes (2.134375ms)
+✔ import validates evidence rather than accepting corrupt grades, cards or counters (3.511958ms)
+✔ a full 500-attempt backup with precise custom ranges can import its own export (140.843708ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 432.918792
