@@ -56,7 +56,7 @@ export function gradeSpot(spot: PracticeSpot, action: Action): {compatible: bool
   return {
     compatible: action === 'raise' ? spot.openFrequency > 0 : spot.openFrequency < 1,
     mixed,
-    expected: mixed ? `加注 ${Number((spot.openFrequency * 100).toFixed(2))}% / 弃牌 ${Number(((1 - spot.openFrequency) * 100).toFixed(2))}%`
+    expected: mixed ? `加注 ${Number((spot.openFrequency * 100).toPrecision(6))}% / 弃牌 ${Number(((1 - spot.openFrequency) * 100).toPrecision(6))}%`
       : spot.openFrequency === 1 ? '加注' : '弃牌',
   };
 }

@@ -62,7 +62,7 @@ export function parseRange(text: string): RangeWeights {
     const term = pieces[0].replace(/10/g, 'T').replace(/[akqjt]/g, c => c.toUpperCase());
     let weight = 1;
     if (pieces.length === 2) {
-      if (!/^(?:\d+(?:\.\d+)?|\.\d+)%?$/.test(pieces[1])) throw new Error(`权重“${pieces[1]}”无效。`);
+      if (!/^(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d+)?%?$/i.test(pieces[1])) throw new Error(`权重“${pieces[1]}”无效。`);
       weight = Number(pieces[1].replace('%', '')) / (pieces[1].endsWith('%') ? 100 : 1);
       if (!Number.isFinite(weight) || weight < 0 || weight > 1) throw new Error('权重用 0–1，或 0%–100%。');
     }
@@ -75,7 +75,7 @@ export function parseRange(text: string): RangeWeights {
 
 export function formatRange(weights: RangeWeights): string {
   return HAND_CLASSES.filter(name => weights[name] > 0).map(name =>
-    weights[name] === 1 ? name : `${name}:${Number((weights[name] * 100).toFixed(2))}%`).join(', ');
+    weights[name] === 1 ? name : `${name}:${weights[name]}`).join(', ');
 }
 
 export function classCombos(name: string): [Card, Card][] {

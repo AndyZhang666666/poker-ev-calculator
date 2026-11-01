@@ -65,7 +65,7 @@ export default function EquityPanel() {
         const saved = JSON.parse(raw);
         if (saved.version !== 1) throw new Error();
         prepareEquity(saved.input); initial = saved.input;
-        setStorageNotice('已恢复上次有效输入，正在重新计算。');
+        setStorageNotice('已恢复上次有效输入。');
       }
     } catch {setStorageNotice('未能恢复输入，已使用示例；计算仍可使用。');}
     if (initial.opponent.type === 'range') lastRange.current = initial.opponent.text;
@@ -152,7 +152,7 @@ export default function EquityPanel() {
           <dl className={styles.facts}>
             <div><dt>对手可用组合</dt><dd>{result.opponentCombos.toLocaleString()}</dd></div>
             <div><dt>因已知牌排除</dt><dd>{result.blockedCombos.toLocaleString()} 个组合</dd></div>
-            <div><dt>组合权重总和</dt><dd>{Number(result.weightedCombos.toFixed(2))}</dd></div>
+            <div><dt>组合权重总和</dt><dd>{Number(result.weightedCombos.toPrecision(6))}</dd></div>
             <div><dt>本次评估局面</dt><dd>{result.evaluations.toLocaleString()}</dd></div>
             <div><dt>计算耗时</dt><dd>{result.elapsedMs.toLocaleString()} ms · 当前设备</dd></div>
             <div><dt>种子</dt><dd>{result.input.seed}</dd></div>

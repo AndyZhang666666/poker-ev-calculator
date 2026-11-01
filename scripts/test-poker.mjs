@@ -26,6 +26,8 @@ test('range notation handles pairs, same-high and diagonal intervals, both suits
   assert.equal(weights.AA, undefined); assert.equal(weights.AKs, .25); assert.equal(weights.A2s, 1);
   assert.deepEqual(parseRange(formatRange(weights)), weights);
   assert.equal(rangeSize(parseRange('AA:50%, AKs:25%')), 4);
+  const precise = parseRange('AA:0.123456, AKs:0.0000001');
+  assert.deepEqual(parseRange(formatRange(precise)), precise);
   for (const value of ['hello', 'AAo', 'AKs:101%', 'AA:-1', 'AA:NaN', 'AA:', 'AA:2', 'AKs-AQo', 'A5s-KTs', 'A0s']) assert.throws(() => parseRange(value), value);
 });
 test('known-card removal counts actual remaining combinations before normalizing weights', () => {

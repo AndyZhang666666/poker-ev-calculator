@@ -11,7 +11,7 @@ export default function PracticePanel({book, update, ready, onReview}: {
 }) {
   const [scope, setScope] = useState<Position | 'all'>('all');
   const [mode, setMode] = useState<'lessons' | 'random'>('lessons');
-  const [editor, setEditor] = useState<Position>('BTN');
+  const [editor, setEditor] = useState<Position>('UTG');
   const [session, setSession] = useState<PracticeSpot[]>([]), [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<Action | null>(null), [correct, setCorrect] = useState(0);
   const answerLock = useRef(false);
@@ -40,7 +40,7 @@ export default function PracticePanel({book, update, ready, onReview}: {
         <label htmlFor="practice-mode">题目</label><select id="practice-mode" value={mode} onChange={event => setMode(event.target.value as 'lessons' | 'random')}>
           <option value="lessons">基础 30 手</option><option value="random">随机 10 手</option></select>
       </div>
-      <p className={styles.micro}>基础题覆盖五个位置的边界；随机题按真实两张牌组合抽样。参考范围修改后，从下一组生效。</p>
+      <p className={styles.micro}>先练位置边界，再随机练习；参考修改从下一组生效。</p>
       <div className={styles.stats}><span>最近作答<strong>{stats.total}</strong></span><span>符合参考<strong>{stats.correct}</strong></span><span>待重练<strong>{stats.due}</strong></span></div>
       {!session.length ? <div className={styles.empty}><p>先练一组，再看哪些位置容易偏离参考。</p>
         <button type="button" className={styles.primary} disabled={!ready} onClick={start}>开始一组练习</button></div>

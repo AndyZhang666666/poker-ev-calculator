@@ -27,8 +27,8 @@ export default function RangeMatrix({weights, onPick, highlight, label = '手牌
           const index = row * 13 + column, weight = weights[name] ?? 0;
           const className = [styles.matrixCell, weight === 1 ? styles.inRange : weight > 0 ? styles.mixedRange : '',
             name.length === 2 ? styles.pair : '', name === highlight ? styles.highlightHand : ''].join(' ');
-          const description = `${name}，频率 ${Number((weight * 100).toFixed(2))}%，${getComboCount(name)} 个原始组合`;
-          const content = <><span>{name}</span>{weight > 0 && weight < 1 && <small>{Number((weight * 100).toFixed(0))}%</small>}</>;
+          const description = `${name}，频率 ${Number((weight * 100).toPrecision(6))}%，${getComboCount(name)} 个原始组合`;
+          const content = <><span>{name}</span>{weight > 0 && weight < 1 && <small>{weight < .01 ? '<1%' : Number((weight * 100).toFixed(0)) + '%'}</small>}</>;
           return onPick ? <button key={name} ref={element => {refs.current[index] = element;}} type="button" role="gridcell"
             aria-label={description} aria-selected={weight > 0} title={description} tabIndex={focus === index ? 0 : -1}
             className={className} disabled={disabled} onFocus={() => setFocus(index)} onKeyDown={event => move(event, index)}

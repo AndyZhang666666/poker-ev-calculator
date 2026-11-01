@@ -96,7 +96,7 @@ export default function Home() {
           把一手牌算清楚，再把同一类决策练熟。
         </p>
         <div className={styles.meta}>
-          算牌：单对手摊牌权益 · 训练：六人桌 100bb 开池参考 · 计算与记录留在本机
+          单对手权益 · 六人桌 100bb 开池训练 · 本地保存
         </div>
       </header>
 
