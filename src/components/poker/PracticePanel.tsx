@@ -34,11 +34,11 @@ export default function PracticePanel({book, update, ready, onReview}: {
   return <div className={styles.layout}>
     <section className={styles.panel} aria-labelledby="practice-title">
       <h2 id="practice-title">按位置练习开池</h2>
-      <div className={styles.inlineRow}><label htmlFor="practice-scope">训练位置</label>
+      <div className={styles.practiceControls}><label htmlFor="practice-scope"><span>训练位置</span>
         <select id="practice-scope" value={scope} onChange={event => setScope(event.target.value as Position | 'all')}>
-          <option value="all">全部五个位置</option>{POSITIONS.map(position => <option key={position} value={position}>{position} · {POSITION_NAMES[position]}</option>)}</select>
-        <label htmlFor="practice-mode">题目</label><select id="practice-mode" value={mode} onChange={event => setMode(event.target.value as 'lessons' | 'random')}>
-          <option value="lessons">基础 30 手</option><option value="random">随机 10 手</option></select>
+          <option value="all">全部五个位置</option>{POSITIONS.map(position => <option key={position} value={position}>{position} · {POSITION_NAMES[position]}</option>)}</select></label>
+        <label htmlFor="practice-mode"><span>题目</span><select id="practice-mode" value={mode} onChange={event => setMode(event.target.value as 'lessons' | 'random')}>
+          <option value="lessons">基础 30 手</option><option value="random">随机 10 手</option></select></label>
       </div>
       <p className={styles.micro}>先练位置边界，再随机练习；参考修改从下一组生效。</p>
       <div className={styles.stats}><span>最近作答<strong>{stats.total}</strong></span><span>符合参考<strong>{stats.correct}</strong></span><span>待重练<strong>{stats.due}</strong></span></div>

@@ -19,3 +19,6 @@
 @media(max-width:560px){.panel{padding:16px}.matrix{min-width:572px}.matrixCell{min-height:44px;font-size:12px}.matrixCell small{font-size:11px}.lessonList{grid-template-columns:repeat(5,1fr)}.mistakeItem{align-items:flex-start;flex-wrap:wrap}.cardSelect select{min-height:44px}.cardRow{gap:8px}.resultBreakdown strong{font-size:18px}.answerRow button{min-width:105px}.inlineRow button{min-height:42px}}
 
 @media(max-width:560px){.trainerCard{padding:18px 12px}.trainerCard h2{font-size:17px}.stats{gap:14px}.inlineRow{column-gap:8px}}
+
+.practiceControls{display:flex;gap:12px;flex-wrap:wrap}.practiceControls label{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}.practiceControls select{min-width:0;max-width:100%}
+@media(max-width:560px){.practiceControls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:12px}.practiceControls label{flex-direction:column;align-items:stretch;gap:4px}.practiceControls select{width:100%;min-height:42px;font-size:13px;padding:7px}}
